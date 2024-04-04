@@ -18,6 +18,7 @@ IP = ""
 with open('ip.txt') as f:
     IP = f.readline().strip('\n')
 
+#ID of channel
 QUOTES_CHANNEL = ""
 with open('quotes.txt') as f:
     QUOTES_CHANNEL = f.readline().strip('\n')
