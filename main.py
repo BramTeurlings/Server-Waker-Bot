@@ -3,6 +3,7 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
+import random
 import discord
 from wakeonlan import send_magic_packet
 import os
@@ -19,6 +20,10 @@ with open('mac.txt') as f:
     
 IP = ""
 with open('ip.txt') as f:
+    TOKEN = f.readline().strip('\n')
+
+QUOTES_CHANNEL = ""
+with open('quotes.txt') as f:
     TOKEN = f.readline().strip('\n')
 
 startHour = 23
@@ -82,8 +87,18 @@ async def on_message(message):
         else:
             send_magic_packet(MAC, ip_address=IP, port=9)
             await message.channel.send('Waking server up... Please wait a few minutes.')
-
+    if message.content.startswith('/quote'):
+        message.channel.send(random_message(QUOTES_CHANNEL))
 client.run(TOKEN)
+
+async def random_message(channel_id: int):
+    try:
+        messages = await channel_id.history(limit=100).flatten()
+        random_message = random.choice(messages)
+        return(random_message)
+    except discord.Forbidden:
+        return("I don't have permission to read messages in that channel")
+ 
 
 
 def print_hi(name):
