@@ -1,10 +1,6 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
 import random
 import discord
+from discord import Intents
 from wakeonlan import send_magic_packet
 import os
 import time as baseTime
@@ -16,15 +12,16 @@ with open('token.txt') as f:
     
 MAC = ""
 with open('mac.txt') as f:
-    TOKEN = f.readline().strip('\n')
+    MAC = f.readline().strip('\n')
     
 IP = ""
 with open('ip.txt') as f:
-    TOKEN = f.readline().strip('\n')
+    IP = f.readline().strip('\n')
 
 QUOTES_CHANNEL = ""
 with open('quotes.txt') as f:
-    TOKEN = f.readline().strip('\n')
+    QUOTES_CHANNEL = f.readline().strip('\n')
+
 
 startHour = 23
 startMinute = 50
@@ -35,6 +32,21 @@ connectionFailed = True
 
 timeArray = [str(startHour), str(startMinute), str(endHour), str(endMinute)]
 
+bot_intents = Intents.default()
+bot_intents.message_content = True
+
+async def random_quote():
+    try:
+        channel = await client.fetch_channel(QUOTES_CHANNEL)
+        messages = [message async for message in channel.history(limit=100) if "-" in message.clean_content] #limit the bot to the last 100 messages
+        if len(messages) > 0:
+             random_message = random.choice(messages)   
+        else:
+            return "No quotes found"     
+        return(random_message.content)
+    except discord.Forbidden:
+        return("I don't have permission to read messages in that channel")
+ 
 
 def is_time_between(begin_time, end_time, check_time=None):
     # If check time is not given, default to current UTC time
@@ -59,7 +71,7 @@ def timeFormatter(time):
 
 while connectionFailed:
     try:
-        client = discord.Client()
+        client = discord.Client(intents=bot_intents)
         connectionFailed = False
     except:
         print("An error occurred while connecting to Discord. Trying again in 10 seconds...")
@@ -88,17 +100,9 @@ async def on_message(message):
             send_magic_packet(MAC, ip_address=IP, port=9)
             await message.channel.send('Waking server up... Please wait a few minutes.')
     if message.content.startswith('/quote'):
-        message.channel.send(random_message(QUOTES_CHANNEL))
+        await message.channel.send(await random_quote())
+        
 client.run(TOKEN)
-
-async def random_message(channel_id: int):
-    try:
-        messages = await channel_id.history(limit=100).flatten()
-        random_message = random.choice(messages)
-        return(random_message)
-    except discord.Forbidden:
-        return("I don't have permission to read messages in that channel")
- 
 
 
 def print_hi(name):
